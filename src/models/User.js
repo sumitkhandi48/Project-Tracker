@@ -19,6 +19,14 @@ const UserSchema = new mongoose.Schema(
       match: [emailRegex, "Please provide a valid email address"],
       index: true,
     },
+    // Stable provider account identifier for GitHub OAuth
+    githubId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+      default: null,
+    },
     image: {
       type: String,
       trim: true,

@@ -163,8 +163,8 @@ export default function LandingPage() {
             </div>
 
             <Button asChild size="sm" variant="default">
-              <Link href="#projects">
-                <span>View projects</span>
+              <Link href="/dashboard">
+                <span>Dashboard</span>
                 <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
               </Link>
             </Button>
