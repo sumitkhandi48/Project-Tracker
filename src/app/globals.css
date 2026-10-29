@@ -1,0 +1,18 @@
+/* Hallmark · theme: console (by request) · genre: modern-minimal · version: 2.0.0 */
+/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 · weakest: V, developer telemetry aesthetic is focused on information density */
+/* Hallmark · copy: verbatim · headline "Everything I’m Building, All in One Place" requested explicitly by user */
+/* Hallmark · console: graphite */
+
+@import "./tokens.css";
+@import "./base.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .font-mono-measured {
+    font-family: var(--font-outlier);
+    font-feature-settings: "tnum" 1, "zero" 1;
+  }
+}

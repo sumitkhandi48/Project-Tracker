@@ -1,0 +1,90 @@
+/* Hallmark Base Floor Rules */
+html,
+body {
+  overflow-x: clip;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  scrollbar-color: var(--color-rule-2) var(--color-paper-2);
+}
+
+::selection {
+  background-color: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+/* Floor 6: Instant focus-visible rings */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Floor 7: prefers-reduced-motion fallback */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Floor 5 & Finish 3: Display heads with balanced wrap */
+h1, h2 {
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  min-width: 0;
+  letter-spacing: var(--tracking-display);
+}
+
+h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  min-width: 0;
+  letter-spacing: var(--tracking-display);
+}
+
+/* Floor 14: Container capped and centered */
+.hallmark-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .hallmark-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Floor 2 & Gate 26b: Safe, specific micro-transitions and interactive states */
+button,
+a,
+input,
+select,
+textarea {
+  transition-property: color, background-color, border-color, opacity;
+  transition-duration: var(--dur-short);
+  transition-timing-function: var(--ease-out);
+}
+
+button:active,
+a:active {
+  transform: translateY(0.5px);
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
