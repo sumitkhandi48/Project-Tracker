@@ -25,7 +25,12 @@ export async function getAuthSession() {
  * @returns {Promise<{ status: 'UNAUTHENTICATED' | 'UNAUTHORIZED' | 'AUTHORIZED', isOwner: boolean, session: object | null }>}
  */
 export async function checkOwnerAccess(customSession = undefined) {
-  const session = customSession !== undefined ? customSession : await getAuthSession();
+  // In production, reject test session injection and strictly enforce verified session retrieval
+  const isTestOverrideAllowed = process.env.NODE_ENV !== "production";
+  const session =
+    isTestOverrideAllowed && customSession !== undefined
+      ? customSession
+      : await getAuthSession();
 
   if (!session || !session.user) {
     return {

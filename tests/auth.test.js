@@ -199,4 +199,63 @@ describe("Phase 3 Authentication & Authorization Unit Tests", () => {
       assert.equal(user.githubId, null);
     });
   });
+
+  // -------------------------------------------------------------------------
+  // 4. Production Security Hardening (Test Session Injection Guard)
+  // -------------------------------------------------------------------------
+  describe("Production Test Session Injection Protection", () => {
+    it("ignores injected owner session and fails closed when NODE_ENV is production", async () => {
+      process.env.NODE_ENV = "production";
+      process.env.OWNER_GITHUB_ID = "12345678";
+
+      const injectedOwnerSession = {
+        user: {
+          name: "Attacker Pretending Owner",
+          email: "owner@example.com",
+          githubId: "12345678",
+        },
+      };
+
+      const result = await checkOwnerAccess(injectedOwnerSession);
+      assert.equal(result.status, "UNAUTHENTICATED");
+      assert.equal(result.isOwner, false);
+      assert.equal(result.session, null);
+    });
+
+    it("ignores injected non-owner session and fails closed when NODE_ENV is production", async () => {
+      process.env.NODE_ENV = "production";
+      process.env.OWNER_GITHUB_ID = "12345678";
+
+      const injectedNonOwnerSession = {
+        user: {
+          name: "Random User",
+          email: "random@example.com",
+          githubId: "88888888",
+        },
+      };
+
+      const result = await checkOwnerAccess(injectedNonOwnerSession);
+      assert.equal(result.status, "UNAUTHENTICATED");
+      assert.equal(result.isOwner, false);
+      assert.equal(result.session, null);
+    });
+
+    it("permits customSession override when outside production (e.g. test environment)", async () => {
+      process.env.NODE_ENV = "test";
+      process.env.OWNER_GITHUB_ID = "12345678";
+
+      const testSession = {
+        user: {
+          name: "Test Owner",
+          email: "owner@example.com",
+          githubId: "12345678",
+        },
+      };
+
+      const result = await checkOwnerAccess(testSession);
+      assert.equal(result.status, "AUTHORIZED");
+      assert.equal(result.isOwner, true);
+      assert.equal(result.session.user.githubId, "12345678");
+    });
+  });
 });
