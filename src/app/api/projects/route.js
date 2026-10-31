@@ -23,7 +23,7 @@ function escapeRegex(text) {
 export async function GET(req) {
   try {
     // 1. Enforce server-side owner authorization
-    const auth = await checkOwnerAccess();
+    const auth = await checkOwnerAccess(req?._testSession);
     if (auth.status === "UNAUTHENTICATED") {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
@@ -159,7 +159,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     // 1. Enforce server-side owner authorization
-    const auth = await checkOwnerAccess();
+    const auth = await checkOwnerAccess(req?._testSession);
     if (auth.status === "UNAUTHENTICATED") {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }

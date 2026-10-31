@@ -4,8 +4,18 @@ import {
   PROJECT_VISIBILITIES,
   PROJECT_PRIORITIES,
 } from "../../models/Project.js";
+import { slugify } from "../utils/slugify.js";
 
-export const FORBIDDEN_FIELDS = ["owner", "_id", "createdAt", "updatedAt", "__v"];
+export { slugify };
+
+export const FORBIDDEN_FIELDS = [
+  "owner",
+  "_id",
+  "createdAt",
+  "updatedAt",
+  "__v",
+  "isDeleting",
+];
 
 export const ALLOWED_FIELDS = [
   "title",
@@ -40,19 +50,6 @@ export const SORTABLE_FIELDS = [
 ];
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-/**
- * Normalizes title into a clean URL-friendly slug
- */
-export function slugify(text) {
-  if (!text || typeof text !== "string") return "";
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 /**
  * Validates HTTP/HTTPS URL

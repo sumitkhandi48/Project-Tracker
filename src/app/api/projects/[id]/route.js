@@ -5,6 +5,10 @@ import { connectToDatabase } from "../../../../lib/db/mongodb.js";
 import Project from "../../../../models/Project.js";
 import { validateProjectPayload } from "../../../../lib/api/project-validation.js";
 import { getVerifiedOwnerId } from "../../../../lib/api/owner-resolver.js";
+import {
+  executeProjectCascadeDeletion,
+  getTestHook,
+} from "../../../../lib/api/project-cascade.js";
 
 /**
  * GET /api/projects/[id]
@@ -13,7 +17,7 @@ import { getVerifiedOwnerId } from "../../../../lib/api/owner-resolver.js";
 export async function GET(req, { params }) {
   try {
     // 1. Enforce server-side owner authorization
-    const auth = await checkOwnerAccess();
+    const auth = await checkOwnerAccess(req?._testSession);
     if (auth.status === "UNAUTHENTICATED") {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
@@ -65,7 +69,7 @@ export async function GET(req, { params }) {
 export async function PATCH(req, { params }) {
   try {
     // 1. Enforce server-side owner authorization
-    const auth = await checkOwnerAccess();
+    const auth = await checkOwnerAccess(req?._testSession);
     if (auth.status === "UNAUTHENTICATED") {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
@@ -169,14 +173,12 @@ export async function PATCH(req, { params }) {
 
 /**
  * DELETE /api/projects/[id]
- * Deletes an authorized project.
- * Documented cascade note: Tasks, milestones, and activities are preserved
- * for historical audit in Phase 4A and will be cascade-deleted or archived in Phase 4B.
+ * Deletes an authorized project and cascades to all child tasks, milestones, and activities.
  */
 export async function DELETE(req, { params }) {
   try {
     // 1. Enforce server-side owner authorization
-    const auth = await checkOwnerAccess();
+    const auth = await checkOwnerAccess(req?._testSession);
     if (auth.status === "UNAUTHENTICATED") {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
@@ -202,29 +204,39 @@ export async function DELETE(req, { params }) {
     await connectToDatabase();
     const ownerId = await getVerifiedOwnerId(auth.session);
 
-    // 4. Delete document scoped strictly to verified owner
-    const deletedProject = await Project.findOneAndDelete({
-      _id: id,
-      owner: ownerId,
+    // 4. Execute owner-scoped cascade deletion across Project, Task, Milestone, and Activity
+    // In production, test hooks are strictly ignored by getTestHook and executeProjectCascadeDeletion
+    const result = await executeProjectCascadeDeletion({
+      projectId: id,
+      ownerId,
+      forceTransactionSupport: getTestHook(req, "_testForceTxSupport", null),
+      _injectFailureStep: getTestHook(req, "_testInjectFailureStep", null),
     });
 
-    if (!deletedProject) {
+    return NextResponse.json(
+      {
+        message: "Project and all associated records deleted successfully",
+        deletedId: id,
+        details: result.cascadeStats,
+        transactional: result.transactional,
+      },
+      { status: 200 }
+    );
+  } catch (err) {
+    if (err.statusCode === 404 || err.message === "Project not found") {
       return NextResponse.json(
         { error: "Project not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(
-      {
-        message: "Project deleted successfully",
-        deletedId: id,
-        cascadeNotice:
-          "Associated tasks, milestones, and activities are preserved for audit in Phase 4A and will be cascade-deleted or archived in Phase 4B.",
-      },
-      { status: 200 }
-    );
-  } catch (err) {
+    if (err.statusCode === 501) {
+      return NextResponse.json(
+        { error: err.message },
+        { status: 501 }
+      );
+    }
+
     console.error(`API DELETE /api/projects/[id] error:`, err.message);
     return NextResponse.json(
       { error: "An unexpected error occurred while deleting project" },

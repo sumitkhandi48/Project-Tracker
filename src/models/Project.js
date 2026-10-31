@@ -148,6 +148,12 @@ const ProjectSchema = new mongoose.Schema(
       maxlength: [3000, "Notes cannot exceed 3000 characters"],
       default: "",
     },
+    // Internal coordination flag for transactional cascade deletion
+    isDeleting: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,
